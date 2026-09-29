@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Nexora – Code Review Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--ink:#22262f;--mut:#6f7480;--line:#e5e6ea;--soft:#f6f6f8;--side:#f0f0f2;--side2:#e2e2e6;--acc:#c8102e;--blue:#2f6fed;--ok:#1a9d5a;--warn:#d98200;--chip:#e6efff;--chipi:#1b2a4a;--sh:0 4px 24px rgba(20,22,30,.08)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171c;--ink:#e8eaee;--mut:#9aa0ab;--line:#2c3038;--soft:#1e2127;--side:#1b1d22;--side2:#2a2d34;--chip:#22304d;--chipi:#dbe6ff;--sh:0 4px 24px rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{--bg:#15171c;--ink:#e8eaee;--mut:#9aa0ab;--line:#2c3038;--soft:#1e2127;--side:#1b1d22;--side2:#2a2d34;--chip:#22304d;--chipi:#dbe6ff;--sh:0 4px 24px rgba(0,0,0,.4)}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{font:15px/1.6 Inter,system-ui,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);-webkit-font-smoothing:antialiased}
+.hide{display:none!important}.mut{color:var(--mut)}.small{font-size:12.5px}.sp{flex:1}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);margin:4px 0;outline:0;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{border-color:#9aa0ab;box-shadow:0 0 0 3px rgba(150,155,170,.18)}
+label{display:block;margin-top:10px;font-weight:600;font-size:13px}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:10px;padding:10px 16px;cursor:pointer;font-weight:500;transition:transform .15s,opacity .2s}
+.btn:hover{opacity:.92}.btn:active{transform:scale(.97)}.btn.g{background:var(--bg);color:var(--ink);border:1px solid var(--line)}.btn.w{width:100%}
+.logo{font-weight:800;letter-spacing:.3em;color:var(--acc)}
+#auth{min-height:100%;display:grid;place-items:center;padding:20px;background:var(--soft)}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--sh)}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);cursor:pointer;font-weight:500;transition:background .2s}
+.gbtn:hover{background:var(--soft)}.or{text-align:center;color:var(--mut);font-size:12px;margin:14px 0;display:flex;align-items:center;gap:10px}.or:before,.or:after{content:"";flex:1;height:1px;background:var(--line)}
+.tabs{display:flex;gap:6px;margin:10px 0}.tabs button{flex:1;padding:8px;border:1px solid var(--line);background:var(--bg);border-radius:9px;cursor:pointer}.tabs .on{border-color:var(--acc);color:var(--acc);background:var(--soft)}
+#err{color:var(--acc);min-height:1.3em;font-size:13px}
+#app{display:flex;height:100%}
+#side{width:264px;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px 12px;flex:none;transition:transform .28s cubic-bezier(.2,.8,.2,1);z-index:30}
+#side .logo{font-size:20px;padding:4px 10px 14px}
+#side a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--ink);text-decoration:none;font-weight:500;transition:background .18s,transform .18s}
+#side a:hover{background:var(--side2);transform:translateX(2px)}#side nav a.on{background:var(--side2);font-weight:600}
+#side .new{background:var(--bg);border:1px solid var(--line);margin-bottom:10px;justify-content:center}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:20;opacity:0;pointer-events:none;transition:opacity .25s}
+#mainc{flex:1;min-width:0;display:flex;flex-direction:column;height:100%}
+header{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--bg);position:relative}
+header b{font-size:15px}#burger{display:none;background:none;border:0;font-size:22px;cursor:pointer;padding:2px 8px}
+#psel{width:auto;max-width:200px;margin:0;padding:6px 10px;font-size:13px;background:var(--soft)}
+.ava{width:34px;height:34px;border-radius:50%;background:#8b90a0;color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px;overflow:hidden;border:0;cursor:pointer;flex:none;background-size:cover;background-position:center}
+#menu{position:absolute;right:16px;top:54px;background:var(--bg);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh);padding:6px;min-width:180px;z-index:15;animation:pop .18s ease}
+#menu a,#menu button{display:block;width:100%;text-align:left;padding:9px 12px;border-radius:8px;color:var(--ink);text-decoration:none;background:none;border:0;cursor:pointer}#menu a:hover,#menu button:hover{background:var(--soft)}
+#view{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;animation:up .35s ease both}
+.page{width:100%;max-width:820px;margin:0 auto;padding:24px 20px 60px}
+#feed{flex:1;overflow:auto;padding:24px 16px 8px}#feed>div{max-width:760px;margin-left:auto;margin-right:auto}
+.m{display:flex;gap:12px;margin-bottom:18px;animation:up .35s ease both}
+.m .av{width:28px;height:28px;border-radius:8px;background:var(--acc);color:#fff;font-weight:700;font-size:13px;display:grid;place-items:center;flex:none}
+.m .bd{min-width:0;flex:1}.m.u{justify-content:flex-end}.m.u .bd{flex:none;max-width:85%;background:var(--soft);border:1px solid var(--line);padding:9px 14px;border-radius:16px;white-space:pre-wrap;word-break:break-word}
+.shim{background:linear-gradient(90deg,var(--mut) 30%,var(--ink) 50%,var(--mut) 70%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sh 1.4s linear infinite}
+.spin{animation:pulse 1.2s ease-in-out infinite}
+.comp{padding:8px 16px calc(14px + env(safe-area-inset-bottom,0px));flex:none}
+.box{max-width:760px;margin:auto;border:1px solid var(--line);border-radius:20px;padding:10px 12px;background:var(--bg);box-shadow:var(--sh);transition:border-color .2s}
+.box:focus-within{border-color:#9aa0ab}.box textarea{border:0;box-shadow:none!important;resize:none;max-height:220px;font-size:15px;padding:6px 4px;margin:0;font-family:inherit}
+.bar{display:flex;align-items:center;gap:8px;margin-top:4px}.bar select{width:auto;margin:0;padding:5px 8px;font-size:12.5px;border-radius:8px;background:var(--soft)}
+.chip{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:5px 12px;font-size:12.5px;cursor:pointer;transition:background .2s}.chip:hover{background:var(--side2)}
+.snd{width:34px;height:34px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);cursor:pointer;font-size:16px;transition:transform .15s}.snd:hover{transform:translateY(-2px)}
+.ctx{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}.ctx span{background:var(--chip);color:var(--chipi);border-radius:6px;padding:2px 8px;font-size:12px}
+.f{border:1px solid var(--line);border-left:4px solid var(--mut);border-radius:10px;padding:9px 13px;margin:8px 0;background:var(--bg);animation:up .4s ease both}
+.f.High{border-left-color:var(--acc)}.f.Medium{border-left-color:var(--warn)}.f.Low{border-left-color:var(--ok)}.f.Mem{border-left-color:var(--blue)}
+.High b.t{color:var(--acc)}.Medium b.t{color:var(--warn)}.Low b.t{color:var(--ok)}
+pre{background:var(--soft);border:1px solid var(--line);padding:10px;border-radius:8px;overflow:auto;font:12.5px "JetBrains Mono",Consolas,monospace;margin:6px 0}
+.diff{border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:6px 0;font-size:13px}.ok{color:var(--ok);font-weight:600}.m ul{margin:4px 0 4px 18px;padding:0}
+.rep{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;cursor:pointer;transition:transform .18s,box-shadow .18s,background .18s;animation:up .4s ease both}
+.rep:hover{transform:translateY(-2px);box-shadow:var(--sh);background:var(--soft)}.rep .sp b{display:block}
+.pill{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--soft);border:1px solid var(--line)}.pill.h{color:var(--acc)}.pill.m2{color:var(--warn)}.pill.l{color:var(--ok)}
+.pl{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.pl .btn{padding:6px 12px;font-size:13px}
+.cover{height:130px;border-radius:16px 16px 0 0;background:linear-gradient(120deg,#9aa0ab,#d5d7de 55%,#f0f0f2)}
+.pcard{padding:0;overflow:hidden}.pbody{padding:0 22px 22px;position:relative}
+.pbody .ava{width:96px;height:96px;font-size:32px;margin-top:-48px;border:4px solid var(--bg);cursor:default}
+.stats{display:flex;gap:24px;margin-top:12px}.stats b{font-size:20px;display:block}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;opacity:0;transition:.3s;z-index:50;pointer-events:none;font-size:14px}#toast.on{opacity:1;transform:translate(-50%,0)}
+.ld{display:grid;place-items:center;height:100%;color:var(--mut)}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(-4px)}}
+@keyframes sh{to{background-position:-200% 0}}
+@keyframes pulse{50%{transform:scale(1.14);opacity:.7}}
+@media(max-width:820px){#side{position:fixed;inset:0 auto 0 0;transform:translateX(-100%)}#app.open #side{transform:none}#app.open #ov{opacity:1;pointer-events:auto}#burger{display:block}header{padding:8px 12px}#psel{max-width:130px}.two{grid-template-columns:1fr}.page{padding:16px 14px 50px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+
+<section id="auth" class="hide"><div class="card" style="width:min(410px,100%)">
+<div class="logo" style="font-size:26px">NEXORA</div><p class="mut" style="margin:6px 0 16px">Sign in to load your projects, saved environment and review reports.</p>
+<button id="g" class="gbtn"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.5 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.2 5.5-4.7 7.2l7.5 5.8c4.4-4.1 7-10.1 7-17.5z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>Continue with Google</button>
+<div class="or">or use email</div>
+<div class="tabs"><button id="tL" class="on">Login</button><button id="tS">Sign up</button></div>
+<input id="nm" placeholder="Full name" class="hide"><input id="em" type="email" placeholder="Email"><input id="pw" type="password" placeholder="Password (6+ characters)">
+<button id="go" class="btn w" style="margin-top:8px">Login</button><p id="err"></p></div></section>
+
+<div id="app" class="hide">
+<div id="ov"></div>
+<aside id="side"><div class="logo">NEXORA</div>
+<a class="new" href="#/agent" id="newc">＋ New review</a>
+<nav><a data-r="agent" href="#/agent">✦ Agent</a><a data-r="reports" href="#/reports">▤ Reports</a><a data-r="memory" href="#/memory">⚙ Environment</a></nav>
+<div class="sp"></div><p class="mut small" style="padding:0 10px">Your data is stored securely in your private Firebase space.</p></aside>
+<div id="mainc"><header><button id="burger">☰</button><b id="ttl"></b><span class="sp"></span><select id="psel"></select><button class="ava" id="av"></button>
+<div id="menu" class="hide"><a href="#/profile">View profile</a><button id="out">Logout</button></div></header>
+<main id="view"></main></div></div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ===== 1. PASTE YOUR FIREBASE WEB CONFIG HERE (Firebase console > Project settings > Your apps) ===== */
+const CFG={apiKey:"YOUR_API_KEY",authDomain:"YOUR_PROJECT.firebaseapp.com",projectId:"YOUR_PROJECT",appId:"YOUR_APP_ID"};
+const LIVE=!CFG.apiKey.startsWith("YOUR")&&!!window.firebase;
+
+const $=id=>document.getElementById(id),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let auth,fs;if(LIVE){firebase.initializeApp(CFG);auth=firebase.auth();fs=firebase.firestore()}
+/* storage layer: Firestore when configured, browser demo storage otherwise */
+const mem={},ls={g(k){try{return localStorage.getItem(k)}catch(e){return mem[k]??null}},s(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}},d(k){try{localStorage.removeItem(k)}catch(e){delete mem[k]}},keys(){try{return Object.keys(localStorage)}catch(e){return Object.keys(mem)}}};
+const db={async get(p){if(LIVE){const d=await fs.doc(p).get();return d.exists?d.data():null}return JSON.parse(ls.g("nx:"+p)||"null")},
+ async set(p,v){if(LIVE)return fs.doc(p).set(v,{merge:true});ls.s("nx:"+p,JSON.stringify({...(JSON.parse(ls.g("nx:"+p)||"{}")),...v}))},
+ async del(p){if(LIVE)return fs.doc(p).delete();ls.d("nx:"+p)},
+ async list(c){if(LIVE){const s=await fs.collection(c).get();return s.docs.map(d=>({id:d.id,...d.data()}))}
+  return ls.keys().filter(k=>k.startsWith("nx:"+c+"/")&&!k.slice(c.length+4).includes("/")).map(k=>JSON.parse(ls.g(k)))}};
+
+let U,prof,projs=[],chat=[],signup=false,pendingName="";
+const P=()=>projs.find(p=>p.id===prof.active)||projs[0];
+const F=[["ide","IDE / platform","VS Code"],["os","Operating system","Windows 11"],["lang","Language","Python"],["ver","Language version","3.14"],["fw","Frameworks","Flask"],["pkgs","Packages (comma separated)","pandas 2.x, psycopg"],["db","Database","PostgreSQL"],["dbver","Database version","16"],["tools","Dev tools","Git, Docker"]];
+const label=k=>F.find(f=>f[0]===k)[1];
+const saveP=p=>db.set(`users/${U.uid}/projects/${p.id}`,p);
+const saveU=()=>db.set(`users/${U.uid}`,prof);
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),2400)}
+
+/* ---- auth ---- */
+const err=e=>$("err").textContent=(e&&e.message||e).replace("Firebase: ","");
+const mode=s=>{signup=s;$("tL").classList.toggle("on",!s);$("tS").classList.toggle("on",s);$("nm").classList.toggle("hide",!s);$("go").textContent=s?"Create account":"Login";$("err").textContent=""};
+$("tL").onclick=()=>mode(false);$("tS").onclick=()=>mode(true);
+function localLogin(u){ls.s("nx_session",JSON.stringify(u));start(u)}
+$("g").onclick=async()=>{try{if(LIVE)await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());else localLogin({uid:"demo-google",displayName:"Google Demo User",email:"demo@gmail.com"})}catch(e){err(e)}};
+$("go").onclick=async()=>{const e=$("em").value.trim().toLowerCase(),p=$("pw").value,n=$("nm").value.trim();
+ if(!/\S+@\S+\.\S+/.test(e))return err("Enter a valid email.");if(p.length<6)return err("Password needs 6+ characters.");
+ try{if(LIVE){if(signup){pendingName=n;const c=await auth.createUserWithEmailAndPassword(e,p);await c.user.updateProfile({displayName:n||e})}else await auth.signInWithEmailAndPassword(e,p)}
+ else localLogin({uid:e,displayName:n||e.split("@")[0],email:e})}catch(x){err(x)}};
+$("out").onclick=async()=>{if(LIVE)await auth.signOut();else{ls.d("nx_session");location.hash="";location.reload()}};
+function showAuth(){$("app").classList.add("hide");$("auth").classList.remove("hide")}
+if(LIVE)auth.onAuthStateChanged(u=>u?start(u):showAuth());else{const s=ls.g("nx_session");s?start(JSON.parse(s)):showAuth()}
+
+async function start(u){
+ $("auth").classList.add("hide");$("app").classList.remove("hide");$("view").innerHTML='<div class="ld shim">Loading your workspace…</div>';
+ U={uid:u.uid,email:u.email||"",photo:u.photoURL||""};
+ try{const pr=await db.get(`users/${U.uid}`)||{};
+ prof={headline:"",location:"",about:"",site:"",active:"",...pr,name:pr.name||pendingName||u.displayName||U.email.split("@")[0],email:U.email,photo:pr.photo||U.photo};
+ await saveU();projs=await db.list(`users/${U.uid}/projects`);projs.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+ if(!projs.length){const p={id:"p"+Date.now(),name:"My first project",env:{},createdAt:Date.now()};await saveP(p);projs=[p]}
+ if(!projs.find(p=>p.id===prof.active)){prof.active=projs[0].id;saveU()}}
+ catch(e){$("view").innerHTML='<div class="ld" style="padding:20px;text-align:center">Could not reach Firestore: '+esc(e.message)+'<br>Check your security rules and config.</div>';return}
+ chat=[];header();route()}
+
+/* ---- shell ---- */
+function header(){const a=$("av");a.textContent=prof.photo?"":(prof.name||"?").split(" ").map(x=>x[0]).slice(0,2).join("").toUpperCase();a.style.backgroundImage=prof.photo?`url(${prof.photo})`:"";
+ $("psel").innerHTML=projs.map(p=>`<option value="${p.id}" ${p.id===prof.active?"selected":""}>${esc(p.name)}</option>`).join("")}
+$("psel").onchange=e=>{prof.active=e.target.value;saveU();chat=[];route()};
+$("av").onclick=e=>{e.stopPropagation();$("menu").classList.toggle("hide")};document.onclick=()=>$("menu").classList.add("hide");
+$("burger").onclick=()=>$("app").classList.toggle("open");$("ov").onclick=()=>$("app").classList.remove("open");
+$("newc").onclick=()=>{chat=[];if(location.hash==="#/agent")route()};
+window.onhashchange=()=>U&&route();
+function route(){const r=(location.hash.match(/#\/(\w+)/)||[])[1]||"agent";
+ document.querySelectorAll("#side nav a").forEach(a=>a.classList.toggle("on",a.dataset.r===r));
+ $("ttl").textContent={agent:"Code Review Agent",reports:"Reports",memory:"Environment memory",profile:"Profile"}[r]||"Agent";
+ $("app").classList.remove("open");$("menu").classList.add("hide");$("view").style.animation="none";$("view").offsetHeight;$("view").style.animation="";
+ ({agent:vAgent,reports:vReports,memory:vMemory,profile:vProfile}[r]||vAgent)()}
+
+/* ---- agent chat ---- */
+function vAgent(){$("view").innerHTML=`<div id="feed"></div><div class="comp"><div class="box"><textarea id="msg" rows="1" placeholder="Tell me your setup, or paste code to review…"></textarea>
+<div class="bar"><select id="mode"><option value="all">Full review</option><option value="security">Security</option><option value="performance">Performance</option><option value="quality">Bugs &amp; quality</option></select><button class="chip" id="ex">Load example</button><span class="sp"></span><button class="snd" id="send" aria-label="Send">↑</button></div></div></div>`;
+ if(!chat.length)greet();else $("feed").innerHTML=chat.map(bub).join("");
+ const m=$("msg");m.oninput=()=>{m.style.height="auto";m.style.height=Math.min(m.scrollHeight,220)+"px"};
+ m.onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};$("send").onclick=send;
+ $("ex").onclick=()=>{m.value=`import mysql.connector\n\ndef get_user(username):\n    query = "SELECT * FROM users WHERE username = '" + username + "'"\n    cursor.execute(query)\n    return cursor.fetchall()`;m.oninput();m.focus()};
+ $("feed").scrollTop=1e9}
+const bub=c=>`<div class="m ${c.w}">${c.w==="a"?'<div class="av">N</div>':""}<div class="bd">${c.h}</div></div>`;
+function say(w,h){chat.push({w,h});const f=$("feed");if(f){f.insertAdjacentHTML("beforeend",bub({w,h}));f.scrollTop=1e9}}
+async function think(steps){const f=$("feed");if(!f)return;const el=document.createElement("div");el.className="m";el.innerHTML='<div class="av spin">N</div><div class="bd shim"></div>';f.append(el);
+ for(const s of steps){el.lastChild.textContent=s+"…";f.scrollTop=1e9;await sleep(650)}el.remove()}
+const missing=env=>["ide","lang","ver","db","pkgs"].filter(k=>!env[k]);
+function greet(){const m=missing(P().env);
+ say("a",m.length===5?`<b>Hi ${esc(prof.name.split(" ")[0])}, I don't have your development environment information yet.</b> Could you please tell me:<ul>${m.map(k=>`<li>Which ${label(k).toLowerCase()} are you using?</li>`).join("")}</ul>I won't assume defaults.`:`Welcome back, ${esc(prof.name.split(" ")[0])}. Reviewing <b>${esc(P().name)}</b> with your saved environment.${m.length?` Still unknown: ${m.map(label).join(", ")}.`:""} Paste code whenever you're ready.`)}
+function send(){const t=$("msg").value.trim();if(!t)return;$("msg").value="";$("msg").style.height="auto";
+ const code=/```/.test(t)||(t.includes("\n")&&/[{};=()]|\bdef |\bimport /.test(t));
+ code?runReview(t.replace(/```\w*\n?/g,"").replace(/```/g,"").trim()):envUpdate(t)}
+async function envUpdate(t){say("u",esc(t));const p=P(),first=missing(p.env).length===5,n=parse(t,p.env),d=diff(p.env,n);
+ if(!d.length)return say("a","I couldn't find new environment details in that. Try: <i>I'm using VS Code, Python 3.14, pandas 2.x and MySQL 8.0</i>, or paste code to review.");
+ await think(["Reading your message","Updating memory"]);p.env=n;await saveP(p);
+ say("a",(first?"Got it! I'll save this information to your memory and use it for future reviews.<br>":"")+updated(d));
+ const m=missing(n);if(m.length)say("a",`Still unknown: <b>${m.map(label).join(", ")}</b>. I'll ask before assuming any of these.`)}
+function diff(o,n){const d=[];F.forEach(([k,t])=>{if((o[k]||"")!==(n[k]||"")){d.push(o[k]?`${t}: ${esc(o[k])} → ${n[k]?esc(n[k]):"cleared"}`:`${t}: ${esc(n[k])} (new)`)}});return d}
+const updated=d=>`<b>Updated your memory:</b><div class="diff">${d.join("<br>")}</div><span class="ok">✓ The latest information will be used for all future reviews.</span>`;
+
+async function runReview(code){const p=P(),env=p.env,md=$("mode").value,names={all:"Full review",security:"Security",performance:"Performance",quality:"Bugs & quality"};
+ say("u",esc(names[md]+" request · "+code.split("\n").length+" lines"));
+ const m=missing(env).filter(k=>["ide","lang","ver"].includes(k));
+ if(m.length)return say("a",`<b>I don't have your development environment information yet.</b> Could you please tell me:<ul>${m.map(k=>`<li>${label(k)}</li>`).join("")}</ul>I won't review against a guessed setup.`);
+ if(/\b(select|insert|update|delete)\b[\s\S]*\b(from|into|set)\b|\.execute\(|\.query\(/i.test(code)&&!env.db)
+  return say("a","<b>Your code talks to a database, but none is saved for this project.</b> Which database and version are you using? I won't guess.");
+ await think(["Retrieving your environment","Reading your code","Checking security and performance","Writing the review"]);
+ const f=review(code,env,md),ctx=F.filter(x=>env[x[0]]).map(x=>x[1].split(" ")[0]+": "+env[x[0]]);
+ say("a",reviewHTML(f,ctx));
+ const id="r"+Date.now();db.set(`users/${U.uid}/reports/${id}`,{id,pid:p.id,pname:p.name,mode:names[md],lines:code.split("\n").length,code:code.slice(0,6000),f,ctx,createdAt:Date.now()}).then(()=>toast("Report saved")).catch(()=>toast("Could not save report"))}
+function reviewHTML(f,ctx){const n=s=>f.filter(x=>x.sev===s).length;
+ return `<b>Code Review</b><div class="ctx">${ctx.map(c=>`<span>${esc(c)}</span>`).join("")}</div><p style="margin:4px 0"><b style="color:var(--acc)">${n("High")} High</b> · <b style="color:var(--warn)">${n("Medium")} Medium</b> · <b style="color:var(--ok)">${n("Low")} Low</b></p>`+
+ (f.map(x=>`<div class="f ${x.sev}"><b class="t">${x.sev==="Mem"?"Memory check":x.cat[0].toUpperCase()+x.cat.slice(1)+" ("+x.sev+")"}</b><br>${esc(x.msg)}${x.why?`<br><span class="mut">Problem: ${esc(x.why)}</span>`:""}${x.fix?`<br><b>Suggestion:</b><pre>${esc(x.fix)}</pre>`:""}</div>`).join("")||"No issues found by the current checks.")+
+ `<p style="margin:4px 0"><b>Overall:</b> ${n("High")||n("Medium")?"Good effort. A few improvements needed.":"Looks clean."}</p>`}
+
+/* ---- reports ---- */
+async function vReports(){$("view").innerHTML='<div class="page"><h2 style="margin:0 0 4px">Reports</h2><p class="mut" style="margin-top:0">Every review you run is saved here.</p><div id="rl" class="shim">Loading reports…</div></div>';
+ let r=[];try{r=await db.list(`users/${U.uid}/reports`)}catch(e){}r.sort((a,b)=>b.createdAt-a.createdAt);
+ const c=(f,s)=>f.filter(x=>x.sev===s).length,el=$("rl");if(!el)return;el.classList.remove("shim");
+ el.innerHTML=r.length?r.map((x,i)=>`<div class="rep" data-i="${i}" style="animation-delay:${i*40}ms"><div class="sp"><b>${esc(x.mode)} · ${esc(x.pname)}</b><span class="mut small">${new Date(x.createdAt).toLocaleString()} · ${x.lines} lines</span></div><span class="pill h">${c(x.f,"High")} H</span><span class="pill m2">${c(x.f,"Medium")} M</span><span class="pill l">${c(x.f,"Low")} L</span></div>`).join(""):'<div class="card mut" style="text-align:center">No reports yet. Run a review in the Agent and it will appear here.</div>';
+ el.onclick=e=>{const b=e.target.closest(".rep");if(b)detail(r[+b.dataset.i])}}
+function detail(x){$("view").innerHTML=`<div class="page"><button class="btn g" id="bk">← All reports</button> <button class="btn g" id="dl" style="color:var(--acc)">Delete</button>
+<h3 style="margin:14px 0 2px">${esc(x.mode)} · ${esc(x.pname)}</h3><p class="mut small" style="margin-top:0">${new Date(x.createdAt).toLocaleString()}</p><details><summary class="mut small" style="cursor:pointer">Reviewed code</summary><pre>${esc(x.code)}</pre></details><div class="card" style="box-shadow:none">${reviewHTML(x.f,x.ctx)}</div></div>`;
+ $("bk").onclick=vReports;$("dl").onclick=async()=>{if(confirm("Delete this report?")){await db.del(`users/${U.uid}/reports/${x.id}`);toast("Report deleted");vReports()}}}
+
+/* ---- environment memory ---- */
+function vMemory(){const p=P();
+ $("view").innerHTML=`<div class="page"><h2 style="margin:0">Environment memory</h2><p class="mut" style="margin-top:0">Persistent and editable. Empty fields are never guessed.</p>
+<div class="pl">${projs.map(x=>`<button class="btn ${x.id===p.id?"":"g"}" data-p="${x.id}">${esc(x.name)}</button>`).join("")}<button class="btn g" id="np">＋ New project</button></div>
+<form id="mf" class="card"><label>Project name</label><input id="f_name" value="${esc(p.name)}"><div class="two">${F.map(([k,t,ph])=>`<div><label>${t}</label><input id="f_${k}" value="${esc(p.env[k])}" placeholder="e.g. ${ph}"></div>`).join("")}</div>
+<div style="display:flex;gap:8px;margin-top:14px"><button class="btn sp">Save to memory</button>${projs.length>1?'<button type="button" class="btn g" id="dp" style="color:var(--acc)">Delete project</button>':""}</div></form></div>`;
+ document.querySelector(".pl").onclick=async e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.id==="np"){const n={id:"p"+Date.now(),name:"Project "+(projs.length+1),env:{},createdAt:Date.now()};await saveP(n);projs.push(n);prof.active=n.id}else prof.active=b.dataset.p;
+  saveU();chat=[];header();vMemory()};
+ $("mf").onsubmit=async e=>{e.preventDefault();const env={};F.forEach(([k])=>env[k]=$("f_"+k).value.trim());p.name=$("f_name").value.trim()||p.name;
+  const d=diff(p.env,env);p.env=env;await saveP(p);header();toast(d.length?"Memory updated":"No changes");if(d.length)chat.push({w:"a",h:updated(d)})};
+ const dp=$("dp");if(dp)dp.onclick=async()=>{if(!confirm("Delete this project?"))return;await db.del(`users/${U.uid}/projects/${p.id}`);projs=projs.filter(x=>x.id!==p.id);prof.active=projs[0].id;saveU();chat=[];header();vMemory()}}
+
+/* ---- profile (separate page, not in the nav) ---- */
+async function vProfile(){let n=0;
+ $("view").innerHTML=`<div class="page"><div class="card pcard"><div class="cover"></div><div class="pbody"><div class="ava" id="pav"></div>
+<h2 style="margin:10px 0 0" id="pn"></h2><div id="ph" class="mut"></div><div class="mut small" id="pl2"></div>
+<div class="stats"><div><b id="pc">…</b><span class="mut small">Reviews</span></div><div><b>${projs.length}</b><span class="mut small">Projects</span></div></div></div></div>
+<form id="pf" class="card" style="margin-top:14px"><h3 style="margin:0">Edit profile</h3><label>Full name</label><input id="p_name" value="${esc(prof.name)}"><label>Headline</label><input id="p_headline" value="${esc(prof.headline)}" placeholder="e.g. Backend developer at Acme">
+<div class="two"><div><label>Location</label><input id="p_location" value="${esc(prof.location)}" placeholder="Hyderabad, India"></div><div><label>Website</label><input id="p_site" value="${esc(prof.site)}" placeholder="https://"></div></div>
+<label>About</label><textarea id="p_about" rows="4" placeholder="Tell others about yourself">${esc(prof.about)}</textarea><label>Profile photo URL (optional)</label><input id="p_photo" value="${esc(prof.photo)}" placeholder="https://…">
+<button class="btn" style="margin-top:12px">Save profile</button></form>
+<div class="card" style="margin-top:14px"><h3 style="margin:0 0 6px">Current environment</h3><div class="ctx">${F.filter(x=>P().env[x[0]]).map(x=>`<span>${esc(P().env[x[0]])}</span>`).join("")||'<span class="mut">Nothing saved yet</span>'}</div></div></div>`;
+ const paint=()=>{const a=$("pav");a.textContent=prof.photo?"":(prof.name||"?").split(" ").map(x=>x[0]).slice(0,2).join("").toUpperCase();a.style.backgroundImage=prof.photo?`url(${prof.photo})`:"";
+  $("pn").textContent=prof.name;$("ph").textContent=prof.headline||"Add a headline";$("pl2").textContent=[prof.location,prof.site].filter(Boolean).join(" · ")+(prof.about?"\n":"");};paint();
+ $("pf").onsubmit=async e=>{e.preventDefault();["name","headline","location","site","about","photo"].forEach(k=>prof[k]=$("p_"+k).value.trim());prof.name=prof.name||"User";await saveU();header();paint();toast("Profile saved")};
+ try{n=(await db.list(`users/${U.uid}/reports`)).length}catch(e){}if($("pc"))$("pc").textContent=n}
+
+/* ---- natural-language memory parser ---- */
+function find(t,list){for(const[n,re]of list){const m=t.match(re);if(m){const v=t.slice(m.index+m[0].length).match(/^\s*v?(\d+(?:\.[\dx]+)*)/);return{n:typeof n==="function"?n(m):n,v:v?v[1]:"",m:m[0]}}}return null}
+const IDE=[["VS Code",/vs ?code|visual studio code/],["PyCharm",/pycharm/],["IntelliJ",/intellij/],["WebStorm",/webstorm/],["Sublime Text",/sublime/],["Vim",/\b(neo)?vim\b/],["Eclipse",/eclipse/]];
+const OS=[[m=>m[0].replace(/^./,c=>c.toUpperCase()).trim(),/windows\s*\d*|ubuntu\s*[\d.]*|linux|macos|mac os/]];
+const LANG=[["Python",/python/],["TypeScript",/typescript/],["JavaScript",/javascript|node(?:\.?js)?/],["Java",/\bjava\b/],["Go",/\bgolang\b|\bgo\b(?=\s*\d)/],["PHP",/\bphp\b/],["C#",/c#/]];
+const DB=[["MySQL",/\bmysql\b(?![.-]?connector)/],["PostgreSQL",/postgres(?:ql)?/],["SQLite",/sqlite\b/],["MongoDB",/mongo(?:db)?\b/]];
+const FW=[["Flask",/flask/],["Django",/django/],["FastAPI",/fastapi/],["React",/react/],["Express",/express/],["Spring",/spring/],["Angular",/angular/],["Vue",/\bvue\b/]];
+const PK=[["mysql-connector",/mysql[.-]connector/],["psycopg2",/psycopg2/],["psycopg",/psycopg(?!2)/],["pymysql",/pymysql/],["pandas",/pandas/],["numpy",/numpy/],["sqlalchemy",/sqlalchemy/],["prisma",/prisma/],["requests",/requests/],["pg",/\bpg\b/],["mysql2",/mysql2/],["mongoose",/mongoose/]];
+const TL=[["Git",/\bgit\b/],["Docker",/docker/],["npm",/\bnpm\b/],["pip",/\bpip\b/]];
+function parse(text,env){const parts=text.toLowerCase().split(/instead of|rather than|replacing|replaced/),t=parts[0],old=parts.slice(1).join(" "),n={...env};
+ const g=(k,l,vk)=>{const r=find(t,l);if(r){n[k]=r.n;if(vk)n[vk]=r.v||(env[k]===r.n?env[vk]:"")}};
+ g("ide",IDE);g("os",OS);g("lang",LANG,"ver");g("db",DB,"dbver");
+ if(/node(?:\.?js)?/.test(t)&&!/typescript/.test(t)){const r=find(t,[["",/node(?:\.?js)?/]]);n.lang="JavaScript";if(r.v)n.ver=r.v}
+ const fw=FW.filter(([,re])=>re.test(t)).map(x=>x[0]);if(fw.length)n.fw=fw.join(", ");
+ const tl=TL.filter(([,re])=>re.test(t)).map(x=>x[0]);if(tl.length)n.tools=[...new Set([...(env.tools||"").split(",").map(s=>s.trim()).filter(Boolean),...tl])].join(", ");
+ let pk=(env.pkgs||"").split(",").map(s=>s.trim()).filter(Boolean);
+ const oldNames=[...PK,...DB].filter(([,re])=>re.test(old)).map(x=>x[0].toLowerCase());
+ if(oldNames.length)pk=pk.filter(p=>!oldNames.some(o=>p.toLowerCase().includes(o.replace("sql",""))&&/mysql|connector|pymysql/.test(p.toLowerCase())&&/mysql/.test(o)||p.toLowerCase().startsWith(o)));
+ PK.forEach(([nm,re])=>{const m=t.match(re);if(!m)return;const v=t.slice(m.index+m[0].length).match(/^\s*v?(\d+(?:\.[\dx]+)*)/);pk=pk.filter(p=>p.split(" ")[0].toLowerCase()!==nm);pk.push(v?nm+" "+v[1]:nm)});
+ n.pkgs=pk.join(", ");
+ if(/mysql/.test(old)&&n.db==="MySQL")n.db=env.db==="MySQL"?"":n.db;
+ return n}
+
+/* ---- review engine: code + memory context + instructions ---- */
+function review(code,env,md){const f=[],py=/python/i.test(env.lang),js=/script|node/i.test(env.lang);
+ const drv=(env.pkgs||"").split(",").map(s=>s.trim().split(" ")[0]).find(s=>/psycopg|mysql|pymysql|sqlite|^pg$|sqlalchemy|prisma|mongo/i.test(s));
+ const ph=py?(/sqlite/i.test(env.db)?"?":"%s"):(/postgres/i.test(env.db)?"$1":"?");
+ const add=(sev,cat,msg,why,fix)=>f.push({sev,cat,msg,why,fix});
+ const um=code.match(/import\s+(mysql\.connector|psycopg2?|sqlite3|pymysql)|require\(["'](mysql2?|pg|sqlite3)["']\)/),usedDb=um?(um[1]||um[2]):"";
+ if(usedDb){const dbGuess=/mysql/.test(usedDb)?"MySQL":/psycopg|^pg$/.test(usedDb)?"PostgreSQL":"SQLite";
+  if(env.db&&dbGuess!==env.db)add("Mem","memory","Your code imports "+usedDb+" ("+dbGuess+") but memory says "+env.db+".","The saved environment may be outdated.","If you changed database, tell me in the chat (e.g. \"I now use "+dbGuess+"\") and I'll update memory.")}
+ if(code.split("\n").some(l=>/(select|insert|update|delete)\b/i.test(l)&&(/["']\s*\+|\+\s*["']|\{[^}]+\}|["']\s*%\s*[\w(]|\.format\(/.test(l))))
+  add("High","security","SQL injection vulnerability detected.","User input is directly concatenated into the SQL query, so an attacker can change what the query does.",
+  `Use parameterized queries${drv?" with "+drv:" (your database driver is not saved in memory)"}${env.db?" on "+env.db:""}:\n`+(py?`cursor.execute(\n  "SELECT * FROM users WHERE username = ${ph}",\n  (username,)\n)`:`db.query("SELECT * FROM users WHERE username = ${ph}", [username])`));
+ if(/\b(eval|exec)\s*\(/.test(code))add("High","security","eval()/exec() runs arbitrary code.","Anything reaching it can inject code.","Parse data (json / ast.literal_eval) or use a lookup table.");
+ if(/(api[_-]?key|secret|password|token)\s*[:=]\s*["'][^"']{4,}/i.test(code))add("High","security","Hard-coded secret found.","Secrets in source leak through Git.","Read it from an environment variable.");
+ if(js&&/innerHTML\s*=/.test(code))add("High","security","innerHTML with user data allows XSS.","Browsers run inserted scripts.","Use textContent or sanitize first.");
+ if(/(for|while)\b[^\n]*\n[\s\S]{0,160}?(execute|query|find\w*|fetch\w*)\s*\(/.test(code))add("Medium","performance","Database call inside a loop, one query per item.","Round trips dominate run time.","Fetch in one query (IN / JOIN) and process results in memory.");
+ if(/connect\s*\(/.test(code))add("Medium","performance","Consider connection pooling"+(env.db?" for "+env.db:"")+".","Opening a connection per call is slow.",py&&/psycopg/.test(drv||"")?"from psycopg_pool import ConnectionPool\npool = ConnectionPool(conninfo)":"Use your driver's pool (e.g. a pool object created once at startup).");
+ if(/for\s.+:\s*\n\s+for\s|for\s*\([^)]*\)\s*\{[\s\S]*for\s*\(/.test(code))add("Medium","performance","Nested loops can be slow on big data.","Cost grows quadratically.","Use a dict/set lookup instead of the inner loop.");
+ if(py&&/except\s*:/.test(code))add("Medium","quality","Bare except hides real bugs.","It also catches Ctrl+C.","Catch a specific exception, e.g. except ValueError:");
+ if(js&&/catch\s*\([^)]*\)\s*\{\s*\}/.test(code))add("Medium","quality","Empty catch block hides errors.","Failures pass silently.","Log or handle the error.");
+ if(py&&/\bprint\(/.test(code))add("Low","quality","print() used for output.","Logging has levels and can be switched off.","import logging; logging.info(...)");
+ if(js&&/console\.log/.test(code))add("Low","quality","Remove console.log before shipping.","Debug output can leak data.","Use a logger.");
+ if(js&&/\bvar\s/.test(code))add("Low","quality","Use let/const instead of var.","var is function-scoped.","const by default.");
+ if(/\bdef \w+\(|function \w+\(|=>/.test(code)&&!f.some(x=>x.cat==="quality"&&x.sev==="Low"))add("Low","quality","Function is well-structured and readable.","","");
+ return f.filter(x=>md==="all"||x.cat===md||x.cat==="memory")}
+</script></body></html>
